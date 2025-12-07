@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+captchas/
+test_captchas/
+failed_cases/
+alfred_cache/
+components_*/
+
+# Temporary files
+live_*.bmp
+vc*.bmp
+resp*.html
+*.html
+
+# Exclude BMP files except in captcha_templates/
+*.bmp
+!captcha_templates/*.bmp
+

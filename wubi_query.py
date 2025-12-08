@@ -13,12 +13,14 @@ import argparse
 import io
 from pathlib import Path
 from urllib.parse import urlencode, urljoin
+import time
 
 import requests
 from bs4 import BeautifulSoup
 from PIL import Image
 
-from captcha_ocr_test import CaptchaSolver, fetch_captcha
+from captcha_ocr_test import fetch_captcha
+from cnn_inference import CNNInference
 
 WMHZ1_URL = "http://www.wangma.com.cn/query/wmhz1.asp"
 WMHZ2_URL = "http://www.wangma.com.cn/query/wmhz2.asp"
@@ -99,9 +101,9 @@ def download_components(codes: dict, outdir: Path) -> dict:
     return mapping
 
 
-def query_char(ch: str, max_retry: int = 5, solver: CaptchaSolver | None = None) -> dict:
-    if solver is None:
-        solver = CaptchaSolver.from_dir()
+def query_char(ch: str, max_retry: int = 5, predictor: CNNInference | None = None) -> dict:
+    if predictor is None:
+        predictor = CNNInference(model_path="captcha_cnn.pth")
 
     last_html = ""
     for attempt in range(1, max_retry + 1):
@@ -109,7 +111,16 @@ def query_char(ch: str, max_retry: int = 5, solver: CaptchaSolver | None = None)
         sess.get(WMHZ1_URL, timeout=10)
 
         cap_bytes = fetch_captcha(sess)
-        code = solver.solve(Image.open(io.BytesIO(cap_bytes)))
+        
+        # Save captcha image for debugging
+        timestamp = int(time.time() * 1000)
+        debug_img_path = f"captcha_{timestamp}.jpg"
+        with open(debug_img_path, "wb") as f:
+            f.write(cap_bytes)
+        print(f"[DEBUG] Captcha image saved to: {debug_img_path}")
+
+        code, conf = predictor.predict(Path(debug_img_path))
+        print(f"[DEBUG] Recognized code: {code} (conf: {conf:.2f})")
 
         payload = {"query_hz": ch, "yanzhengma": code, "ok": "查询"}
         body = urlencode(payload, encoding="gb2312").encode("gb2312")
@@ -139,8 +150,8 @@ def main():
     if len(args.char) != 1:
         raise SystemExit("请输入单个汉字进行查询")
 
-    solver = CaptchaSolver.from_dir()
-    codes = query_char(args.char, max_retry=args.max_retry, solver=solver)
+    predictor = CNNInference(model_path="captcha_cnn.pth")
+    codes = query_char(args.char, max_retry=args.max_retry, predictor=predictor)
 
     print(f"{args.char} 的编码：")
     print(f"  王码五笔86：{codes.get('wb86', '-')}")

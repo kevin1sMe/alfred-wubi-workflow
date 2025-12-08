@@ -120,7 +120,7 @@ def build_items(ch: str, codes: dict, cache_dir: Path, filters: set | None) -> l
 def main():
     ap = argparse.ArgumentParser(description="Alfred Script Filter for wangma wubi query")
     ap.add_argument("char", help="single Chinese character")
-    ap.add_argument("--max-retry", type=int, default=8, help="captcha retry limit")
+    ap.add_argument("--max-retry", type=int, default=1, help="captcha retry limit")
     ap.add_argument("--cache-dir", type=Path, default=Path("alfred_cache"), help="where to store component images")
     ap.add_argument("--only", help="comma-separated filters (summary,num5,num6,num9,wb86,wb98,wbx,strokes,num6_parts,num9_parts,wb86_parts,wb98_parts,wbx_parts)")
     args = ap.parse_args()

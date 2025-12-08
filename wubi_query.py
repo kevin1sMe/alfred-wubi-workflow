@@ -11,6 +11,7 @@
 
 import argparse
 import io
+import sys
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlencode, urljoin
@@ -118,10 +119,11 @@ def query_char(ch: str, max_retry: int = 5, predictor: Optional[CNNInference] = 
         debug_img_path = f"captcha_{timestamp}.jpg"
         with open(debug_img_path, "wb") as f:
             f.write(cap_bytes)
-        print(f"[DEBUG] Captcha image saved to: {debug_img_path}")
+        print(f"[DEBUG] Captcha image saved to: {debug_img_path}", file=sys.stderr)
 
         code, conf = predictor.predict(Path(debug_img_path))
-        print(f"[DEBUG] Recognized code: {code} (conf: {conf:.2f})")
+        # 4) 打印识别结果
+        print(f"[DEBUG] Recognized code: {code} (conf: {conf:.2f})", file=sys.stderr)
 
         payload = {"query_hz": ch, "yanzhengma": code, "ok": "查询"}
         body = urlencode(payload, encoding="gb2312").encode("gb2312")

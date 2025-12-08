@@ -12,6 +12,7 @@
 import argparse
 import io
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlencode, urljoin
 import time
 
@@ -19,7 +20,7 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image
 
-from captcha_ocr_test import fetch_captcha
+from cnn.captcha_ocr_test import fetch_captcha
 from cnn_inference import CNNInference
 
 WMHZ1_URL = "http://www.wangma.com.cn/query/wmhz1.asp"
@@ -101,7 +102,7 @@ def download_components(codes: dict, outdir: Path) -> dict:
     return mapping
 
 
-def query_char(ch: str, max_retry: int = 5, predictor: CNNInference | None = None) -> dict:
+def query_char(ch: str, max_retry: int = 5, predictor: Optional[CNNInference] = None) -> dict:
     if predictor is None:
         predictor = CNNInference(model_path="captcha_cnn.pth")
 

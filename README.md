@@ -4,19 +4,30 @@
 
 ## 主要脚本
 
-- `captcha_ocr_test.py`：下载、标注、构建验证码模板，内置 OCR 解码器。
-- `wubi_query.py`：命令行查询单字，输出五笔 86/98/新世纪、数字王码 5/6/9 键、笔画序列，可下载拆解 BMP。
+- `wubi_query.py`：命令行查询单字，输出五笔 86/98/新世纪、数字王码 5/6/9 键、笔画序列，可下载拆解 BMP。使用自训练 CNN 模型识别验证码。
 - `alfred_wubi.py`：Alfred Script Filter 输出 JSON，附带拆解图片（icon/quicklook）。
+- `cnn_inference.py`：CNN 模型推理，用于验证码识别。
+- `cnn/captcha_ocr_test.py`：模板匹配方式的验证码识别（旧方法，仅用于对比测试）。
 
 ## 依赖
 
 - Python 3
 - `requests`、`Pillow`、`beautifulsoup4`
+- `torch`、`torchvision`（用于 CNN 验证码识别）
 
 建议在 Workflow 目录内创建虚拟环境：
-```
+```bash
 python3 -m venv .venv
-.venv/bin/pip install requests pillow beautifulsoup4
+.venv/bin/pip install requests pillow beautifulsoup4 torch torchvision
+```
+
+**注意**：需要预训练的 CNN 模型文件 `captcha_cnn.pth`，放置在项目根目录。
+
+### 可选依赖（仅用于模型评估）
+
+如需运行 `cnn/` 目录下的模型评估脚本，需额外安装：
+```bash
+pip install easyocr pytesseract
 ```
 
 ## 使用示例
@@ -47,6 +58,6 @@ python3 alfred_wubi.py 你 --only wb86,wb86_parts
 
 ## 注意事项
 
-- 验证码依赖 `captcha_templates/`，若识别不稳，可追加模板或提高 `--max-retry`。
+- 验证码识别使用自训练 CNN 模型（`captcha_cnn.pth`），识别准确率近乎100%。若识别失败，可适当提高 `--max-retry` 参数。
 - 提交表单使用 GB2312 编码，保持代码页设置即可。
 - 下载的拆解 BMP 使用绝对路径，方便在 Alfred 中直接作为 icon/quicklook。 

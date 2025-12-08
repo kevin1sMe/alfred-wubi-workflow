@@ -15,6 +15,7 @@ Dependencies: requests, pillow, bs4 (already required by wubi_query.py).
 import argparse
 import json
 from pathlib import Path
+from typing import Optional
 
 import wubi_query
 
@@ -36,7 +37,7 @@ VALID_FILTERS = {
 }
 
 
-def build_items(ch: str, codes: dict, cache_dir: Path, filters: set | None) -> list:
+def build_items(ch: str, codes: dict, cache_dir: Path, filters: Optional[set]) -> list:
     items = []
 
     def allowed(key: str) -> bool:
@@ -142,8 +143,8 @@ def main():
                 filters.add(f)
 
     try:
-        solver = wubi_query.CaptchaSolver.from_dir()
-        codes = wubi_query.query_char(ch, max_retry=args.max_retry, solver=solver)
+        predictor = wubi_query.CNNInference(model_path="captcha_cnn.pth")
+        codes = wubi_query.query_char(ch, max_retry=args.max_retry, predictor=predictor)
     except Exception as e:  # noqa: BLE001
         print(json.dumps({"items": [{"title": "Query failed", "subtitle": str(e), "valid": False}]}))
         return

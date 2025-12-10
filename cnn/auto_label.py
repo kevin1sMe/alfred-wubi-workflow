@@ -113,8 +113,12 @@ def auto_label_easyocr(image_path: Path) -> Tuple[str, float]:
     if not EASYOCR_AVAILABLE:
         raise RuntimeError("easyocr 未安装，请运行: pip install easyocr")
     
+    # Use GPU if available (MPS on Apple Silicon, CUDA on NVIDIA)
+    import torch
+    use_gpu = torch.cuda.is_available() or torch.backends.mps.is_available()
+    
     # Initialize EasyOCR reader (only recognize English numbers)
-    reader = easyocr.Reader(['en'], gpu=False)
+    reader = easyocr.Reader(['en'], gpu=use_gpu)
     import numpy as np
     
     im = preprocess_for_ocr(image_path)

@@ -185,7 +185,10 @@ def dual_verify_label(
     template_solver = CaptchaSolver.from_dir()
     
     print("初始化 EasyOCR 识别器（首次运行会下载模型）...")
-    easyocr_reader = easyocr.Reader(['en'], gpu=False)
+    # Use GPU if available (MPS on Apple Silicon, CUDA on NVIDIA)
+    import torch
+    use_gpu = torch.cuda.is_available() or torch.backends.mps.is_available()
+    easyocr_reader = easyocr.Reader(['en'], gpu=use_gpu)
     
     cnn_model = None
     if CNN_AVAILABLE:

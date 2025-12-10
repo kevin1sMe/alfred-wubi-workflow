@@ -103,9 +103,13 @@ class SimpleCNN(nn.Module):
         
         return d1, d2, d3, d4
 
+import time
+
 def train():
     parser = argparse.ArgumentParser(description="Train Captcha CNN")
     parser.add_argument('folders', nargs='+', help='List of folders to look for training data (e.g. captchas test_verification)')
+    parser.add_argument('--device', type=str, default='auto', choices=['auto', 'cpu', 'cuda', 'mps'], help='Device to train on (auto, cpu, cuda, mps)')
+    parser.add_argument('--epochs', type=int, default=300, help='Number of epochs to train (default: 300)')
     args = parser.parse_args()
 
     # 1. Collect Data
@@ -158,7 +162,11 @@ def train():
         print(f"  {files[i]} -> {lbl.tolist()}")
     
     # 4. Model Setup
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    if args.device == 'auto':
+        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    else:
+        device = torch.device(args.device)
+    
     print(f"Training on device: {device}")
     
     model = SimpleCNN().to(device)
@@ -168,8 +176,12 @@ def train():
     # 5. Training Loop
     print("\nStarting Training...")
     # Increase Epochs for small dataset convergence
-    TOTAL_EPOCHS = 300
+    TOTAL_EPOCHS = args.epochs
+    
+    start_time = time.time()
+    
     for epoch in range(TOTAL_EPOCHS):
+        epoch_start = time.time()
         model.train()
         running_loss = 0.0
         correct = 0
@@ -207,9 +219,15 @@ def train():
             total += labels.size(0)
             
         epoch_acc = 100 * correct / total
-        if (epoch + 1) % 20 == 0:
-            print(f"Epoch [{epoch+1}/{TOTAL_EPOCHS}], Loss: {running_loss/len(dataloader):.4f}, Acc: {epoch_acc:.2f}%")
+        epoch_duration = time.time() - epoch_start
+        
+        if (epoch + 1) % 20 == 0 or (epoch + 1) == TOTAL_EPOCHS:
+            print(f"Epoch [{epoch+1}/{TOTAL_EPOCHS}], Loss: {running_loss/len(dataloader):.4f}, Acc: {epoch_acc:.2f}%, Time: {epoch_duration:.2f}s")
             
+    total_time = time.time() - start_time
+    print(f"\nTraining completed in {total_time:.2f} seconds.")
+    print(f"Average time per epoch: {total_time/TOTAL_EPOCHS:.4f} seconds.")
+
     # 6. Save Model
     torch.save(model.state_dict(), "captcha_cnn.pth")
     print("\nModel saved to captcha_cnn.pth")
